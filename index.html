@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPL Friends League - AUTO SAVE</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(-45deg, #1e3c72, #2a5298, #1e3c72, #2a5298);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0.3); opacity: 0; }
+            50% { transform: scale(1.05); }
+            70% { transform: scale(0.9); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes slideInUp {
+            0% { transform: translateY(50px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes glow {
+            0%, 100% { text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px #ffd700; }
+            50% { text-shadow: 0 0 20px #fff, 0 0 30px #ffd700, 0 0 40px #ff6b6b; }
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            animation: slideInUp 1s ease-out;
+        }
+
+        h1 {
+            text-align: center;
+            color: #fff;
+            font-size: 3.5em;
+            margin-bottom: 10px;
+            animation: bounceIn 1.5s ease-out, glow 2s ease-in-out infinite alternate;
+            text-shadow: 0 0 20px rgba(255,215,0,0.5);
+        }
+
+        .league-name {
+            text-align: center;
+            color: #ffd700;
+            font-size: 1.8em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            animation: float 3s ease-in-out infinite, glow 3s ease-in-out infinite alternate;
+        }
+
+        .save-status {
+            text-align: center;
+            color: #27ae60;
+            font-weight: bold;
+            margin-bottom: 20px;
+            font-size: 1.2em;
+            animation: pulse 1s ease-in-out;
+        }
+
+        .save-status.saved {
+            animation: shake 0.5s ease-in-out, pulse 1s ease-in-out;
+            color: #f39c12;
+        }
+
+        .tabs {
+            display: flex;
+            background: rgba(255,255,255,0.15);
+            border-radius: 20px;
+            padding: 8px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(15px);
+            overflow-x: auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            animation: slideInUp 0.8s ease-out 0.2s both;
+        }
+
+        .tab {
+            padding: 15px 30px;
+            background: transparent;
+            border: 2px solid rgba(255,255,255,0.2);
+            color: #ddd;
+            cursor: pointer;
+            border-radius: 15px;
+            font-weight: bold;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            white-space: nowrap;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tab::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .tab:hover::before {
+            left: 100%;
+        }
+
+        .tab:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+
+        .tab.active {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+            transform: scale(1.1) translateY(-5px);
+            box-shadow: 0 15px 35px rgba(238,90,36,0.4);
+            animation: pulse 1.5s infinite;
+        }
+
+        .controls {
+            background: rgba(255,255,255,0.15);
+            padding: 25px;
+            border-radius: 20px;
+            margin-bottom: 25px;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            animation: slideInUp 0.8s ease-out 0.4s both;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .add-form {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+        }
+
+        input, select, button {
+            padding: 15px 20px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        input, select {
+            background: rgba(255,255,255,0.95);
+            color: #333;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        input:focus, select:focus {
+            transform: scale(1.02);
+            box-shadow: 0 10px 25px rgba(52,152,219,0.3);
+            outline: none;
+        }
+
+        .add-btn {
+            background: linear-gradient(45deg, #27ae60, #2ecc71);
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 8px 20px rgba(46,204,113,0.4);
+            animation: pulse 2s infinite;
+        }
+
+        .add-btn:hover {
+            transform: scale(1.1) translateY(-3px);
+            box-shadow: 0 15px 30px rgba(46,204,113,0.6);
+            animation: spin 0.5s linear;
+        }
+
+        .clear-btn {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 8px 20px rgba(231,76,60,0.4);
+        }
+
+        .clear-btn:hover {
+            transform: scale(1.05) rotate(5deg);
+            box-shadow: 0 12px 25px rgba(231,76,60,0.6);
+            animation: shake 0.3s ease-in-out;
+        }
+
+        .export-btn {
+            background: linear-gradient(45deg, #9b59b6, #8e44ad);
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 8px 20px rgba(155,89,182,0.4);
+        }
+
+        .export-btn:hover {
+            transform: scale(1.1) rotateY(360deg);
+            box-shadow: 0 15px 35px rgba(155,89,182,0.6);
+        }
+
+        .table-container {
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 25px;
+            padding: 35px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.25);
+            overflow-x: auto;
+            animation: slideInUp 1s ease-out 0.6s both;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 1.1em;
+        }
+
+        th, td {
+            padding: 18px 25px;
+            text-align: left;
+            border-bottom: 2px solid #f0f0f0;
+            transition: all 0.3s ease;
+        }
+
+        th {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+            font-weight: bold;
+            position: relative;
+            overflow: hidden;
+        }
+
+        th::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.3), transparent);
+            transform: rotate(45deg);
+            animation: shine 3s infinite;
+        }
+
+        @keyframes shine {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
+
+        tr {
+            animation: slideInUp 0.5s ease-out;
+        }
+
+        tr:hover { 
+            background: linear-gradient(45deg, #f8f9ff, #e8f4f8);
+            transform: scale(1.01);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        .friend-name {
+            font-weight: bold;
+            color: #2c3e50;
+            padding: 10px 15px;
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            border-radius: 25px;
+            display: inline-block;
+            font-size: 0.95em;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(52,152,219,0.3);
+        }
+
+        .friend-name:hover {
+            transform: scale(1.1) rotate(5deg);
+            box-shadow: 0 10px 25px rgba(52,152,219,0.5);
+        }
+
+        .runs { 
+            color: #27ae60; 
+            font-weight: bold;
+            font-size: 1.2em;
+            transition: all 0.3s ease;
+        }
+
+        .wickets { 
+            color: #e74c3c; 
+            font-weight: bold;
+            font-size: 1.2em;
+            transition: all 0.3s ease;
+        }
+
+        tr:hover .runs {
+            transform: scale(1.2);
+            text-shadow: 0 0 10px rgba(39,174,96,0.5);
+        }
+
+        tr:hover .wickets {
+            transform: scale(1.2);
+            text-shadow: 0 0 10px rgba(231,76,60,0.5);
+        }
+
+        .total-row {
+            background: linear-gradient(45deg, #f39c12, #e67e22) !important;
+            color: white;
+            font-size: 1.4em;
+            font-weight: bold;
+            animation: pulse 2s infinite;
+            box-shadow: 0 10px 30px rgba(243,156,18,0.5);
+        }
+
+        .delete-btn {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(231,76,60,0.4);
+        }
+
+        .delete-btn:hover {
+            transform: scale(1.15) rotate(10deg);
+            box-shadow: 0 10px 25px rgba(231,76,60,0.6);
+            animation: shake 0.2s infinite;
+        }
+
+        /* Loading animation for new rows */
+        .new-row {
+            animation: bounceIn 0.6s ease-out;
+        }
+
+        @media (max-width: 768px) {
+            .add-form { flex-direction: column; }
+            input, select, button { width: 100%; margin-bottom: 10px; }
+            .tabs { flex-wrap: wrap; justify-content: center; }
+            h1 { font-size: 2.5em; }
+        }
+
+        /* Cricket ball floating animation */
+        .cricket-ball {
+            position: fixed;
+            width: 40px;
+            height: 40px;
+            background: radial-gradient(circle at 30% 30%, #ff4444, #cc0000);
+            border-radius: 50%;
+            top: 20px;
+            right: 20px;
+            animation: float 4s ease-in-out infinite, spin 20s linear infinite;
+            box-shadow: 0 5px 15px rgba(255,68,68,0.5);
+            z-index: 1000;
+        }
+
+        .cricket-seam {
+            position: absolute;
+            width: 20px;
+            height: 4px;
+            background: #fff;
+            border-radius: 2px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(45deg);
+        }
+
+        .cricket-seam::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 4px;
+            background: #fff;
+            border-radius: 2px;
+            top: 0;
+            left: 0;
+            transform: rotate(-90deg);
+        }
+    </style>
+</head>
+<body>
+    <div class="cricket-ball">
+        <div class="cricket-seam"></div>
+    </div>
+
+    <div class="container">
+        <h1>🏏 IPL Auction Players</h1>
+        <p class="league-name" id="leagueName"> Battle! 💾 </p>
+        <p class="save-status" id="saveStatus">💾 Data Loaded Successfully!</p>
+
+        <div class="tabs" id="tabsContainer">
+            <button class="tab active" onclick="switchFriend('All')">👥 All Players</button>
+            <!-- Dynamic tabs yahan add honge -->
+        </div>
+
+        <div class="controls">
+            <div style="display:flex;justify-content:center;margin-bottom:12px;gap:8px;flex-wrap:wrap">
+                <input type="text" id="searchFriend" placeholder="Search friend or player" oninput="searchPlayers()" style="padding:12px 16px;border-radius:12px;min-width:220px;border:none;box-shadow:0 5px 15px rgba(0,0,0,0.08)">
+                <button onclick="clearSearch()" style="padding:12px 16px;border-radius:12px;background:linear-gradient(45deg,#95a5a6,#7f8c8d);color:#fff;border:none;cursor:pointer">Clear</button>
+            </div>
+            <div class="add-form">
+                <input type="text" id="playerName" placeholder="Player Name">
+                <input type="text" id="team" placeholder="Team">
+                <input type="number" id="runs" placeholder="Runs" min="0">
+                <input type="number" id="wickets" placeholder="Wickets" min="0">
+                <select id="avg">
+                    <option value="-">-</option>
+                    <option value="50+">50+</option>
+                    <option value="40-49">40-49</option>
+                </select>
+                <button id="addBtn" class="add-btn" onclick="addPlayer()">➕ ADD PLAYER</button>
+                <button id="cancelEditBtn" class="clear-btn" onclick="cancelEdit()" style="display:none">✖️ Cancel Edit</button>
+                <button class="clear-btn" onclick="clearCurrent()">🗑️ Clear Current</button>
+                <button class="export-btn" onclick="exportData()">📤 Export JSON</button>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table id="playersTable">
+                <thead>
+                    <tr>
+                        <th>Friend</th>
+                        <th>Player</th>
+                        <th>Team</th>
+                        <th>Runs</th>
+                        <th>Wickets</th>
+                        <th>Avg</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+    let friendsData = {};
+    let currentFriend = 'All';
+    // Editing state
+    let isEditing = false;
+    let editingFriend = null;
+    let editingIndex = -1;
+    // Search state
+    let searchQuery = '';
+
+        // Save data to localStorage
+        function saveData() {
+            localStorage.setItem('iplFriendsLeague', JSON.stringify(friendsData));
+            const saveStatus = document.getElementById('saveStatus');
+            saveStatus.textContent = '💾 Saved at ' + new Date().toLocaleTimeString();
+            saveStatus.classList.add('saved');
+            setTimeout(() => {
+                saveStatus.classList.remove('saved');
+                saveStatus.textContent = '';
+            }, 3000);
+        }
+
+        // Auto-save every 5 seconds
+        setInterval(saveData, 5000);
+
+        // Load data from localStorage
+        function loadData() {
+            const saved = localStorage.getItem('iplFriendsLeague');
+            if (saved) {
+                try {
+                    friendsData = JSON.parse(saved) || {};
+                    const saveStatus = document.getElementById('saveStatus');
+                    saveStatus.textContent = '💾 Data Loaded Successfully!';
+                    saveStatus.classList.add('saved');
+                    setTimeout(() => saveStatus.classList.remove('saved'), 1500);
+                } catch (e) {
+                    console.error('Failed to parse saved data, using defaults.', e);
+                    friendsData = {};
+                }
+            } else {
+                // Default data if nothing saved
+                friendsData = {
+                    'Aman': [
+                        {name: 'Virat Kohli', team: 'RCB', runs: 741, wickets: 0, avg: '57.00'}
+                    ],
+                    'Rahul': [
+                        {name: 'Ruturaj Gaikwad', team: 'CSK', runs: 583, wickets: 0, avg: '48.58'}
+                    ]
+                };
+                // persist defaults
+                saveData();
+            }
+        }
+
+        function createTabs() {
+            const tabsContainer = document.getElementById('tabsContainer');
+            tabsContainer.innerHTML = '';
+
+            const allBtn = document.createElement('button');
+            allBtn.className = 'tab' + (currentFriend === 'All' ? ' active' : '');
+            allBtn.textContent = '👥 All Players';
+            allBtn.onclick = () => switchFriend('All');
+            tabsContainer.appendChild(allBtn);
+
+            Object.keys(friendsData).forEach(friend => {
+                const tab = document.createElement('button');
+                tab.className = 'tab' + (currentFriend === friend ? ' active' : '');
+                tab.textContent = `👤 ${friend}`;
+                tab.onclick = () => switchFriend(friend);
+                tabsContainer.appendChild(tab);
+            });
+
+            const addTab = document.createElement('button');
+            addTab.className = 'tab';
+            addTab.textContent = '➕ Add Friend';
+            addTab.onclick = addNewFriend;
+            tabsContainer.appendChild(addTab);
+        }
+
+        function switchFriend(friendName) {
+            currentFriend = friendName;
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            // mark the matching tab active
+            const tabs = Array.from(document.querySelectorAll('.tab'));
+            const match = tabs.find(t => t.textContent.includes(friendName));
+            if (match) match.classList.add('active');
+
+            renderTable();
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+
+            let displayData = [];
+            if (currentFriend === 'All') {
+                Object.keys(friendsData).forEach(friend => {
+                    friendsData[friend].forEach(player => {
+                        displayData.push({...player, friend});
+                    });
+                });
+            } else {
+                displayData = friendsData[currentFriend]?.map(player => ({...player, friend: currentFriend})) || [];
+            }
+
+            // Apply search filter (by friend name or player name)
+            const q = searchQuery.trim().toLowerCase();
+            if (q) {
+                displayData = displayData.filter(p => (
+                    (p.friend && String(p.friend).toLowerCase().includes(q)) ||
+                    (p.name && String(p.name).toLowerCase().includes(q))
+                ));
+            }
+
+            displayData.forEach((player, index) => {
+                const row = tbody.insertRow();
+                row.classList.add('new-row');
+                row.innerHTML = `
+                    <td><span class="friend-name">${player.friend}</span></td>
+                    <td class="player-name">${player.name}</td>
+                    <td>${player.team}</td>
+                    <td class="runs">${player.runs}</td>
+                    <td class="wickets">${player.wickets}</td>
+                    <td>${player.avg}</td>
+                    <td>
+                        <button class="delete-btn" onclick="deletePlayer('${player.friend}', ${index})">DELETE</button>
+                        <button class="add-btn" style="margin-left:6px;background:linear-gradient(45deg,#3498db,#2980b9)" onclick="startEdit('${player.friend}', ${index})">EDIT</button>
+                    </td>
+                `;
+
+                // Remove new-row class after animation
+                setTimeout(() => {
+                    row.classList.remove('new-row');
+                }, 600);
+            });
+
+            const totalRuns = displayData.reduce((sum, p) => sum + (Number(p.runs) || 0), 0);
+            const totalWickets = displayData.reduce((sum, p) => sum + (Number(p.wickets) || 0), 0);
+
+            const totalRow = tbody.insertRow();
+            totalRow.className = 'total-row';
+            totalRow.innerHTML = `
+                <td colspan="3"><strong>${currentFriend === 'All' ? 'OVERALL TOTAL' : 'TOTAL'}</strong></td>
+                <td class="runs"><strong>${totalRuns}</strong></td>
+                <td class="wickets"><strong>${totalWickets}</strong></td>
+                <td>-</td>
+                <td></td>
+            `;
+        }
+
+        function searchPlayers() {
+            const input = document.getElementById('searchFriend');
+            searchQuery = input ? input.value : '';
+            // If exact friend name typed, switch tab to that friend for clarity
+            const q = searchQuery.trim();
+            if (q && friendsData[q]) {
+                switchFriend(q);
+            } else if (!q) {
+                // if cleared, show currentFriend's view
+                renderTable();
+            } else {
+                // just render filtered results
+                renderTable();
+            }
+        }
+
+        function clearSearch() {
+            const input = document.getElementById('searchFriend');
+            if (input) input.value = '';
+            searchQuery = '';
+            // reset to currentFriend view
+            renderTable();
+        }
+
+        function addPlayer() {
+            const name = document.getElementById('playerName').value.trim();
+            const team = document.getElementById('team').value.trim();
+            const runs = parseInt(document.getElementById('runs').value) || 0;
+            const wickets = parseInt(document.getElementById('wickets').value) || 0;
+            const avg = document.getElementById('avg').value;
+
+            if (!name || !team) return alert('Name aur Team dono chahiye');
+
+            // If editing, replace the target player
+            if (isEditing) {
+                if (!friendsData[editingFriend]) friendsData[editingFriend] = [];
+                friendsData[editingFriend][editingIndex] = {name, team, runs, wickets, avg};
+
+                // reset editing UI
+                isEditing = false;
+                editingFriend = null;
+                editingIndex = -1;
+                document.getElementById('addBtn').textContent = '➕ ADD PLAYER';
+                document.getElementById('cancelEditBtn').style.display = 'none';
+                clearInputs();
+                renderTable();
+                saveData();
+                createTabs();
+                return;
+            }
+
+            if (currentFriend === 'All') {
+                return alert('Pehle kisi Friend ko select karein!');
+            }
+
+            if (!friendsData[currentFriend]) friendsData[currentFriend] = [];
+            friendsData[currentFriend].push({name, team, runs, wickets, avg});
+            clearInputs();
+            renderTable();
+            saveData();
+            createTabs();
+
+            // Success animation
+            const addBtnEl = document.getElementById('addBtn');
+            if (addBtnEl) {
+                addBtnEl.style.animation = 'bounceIn 0.5s ease-out';
+                setTimeout(() => { addBtnEl.style.animation = ''; }, 500);
+            }
+        }
+
+        function startEdit(friend, index) {
+            // Map index from flattened list to actual friend's item index when viewing 'All'
+            let targetIndex = index;
+            if (currentFriend === 'All') {
+                // find nth item that matches friend
+                let counter = -1;
+                outer: for (const f of Object.keys(friendsData)) {
+                    for (let i = 0; i < friendsData[f].length; i++) {
+                        counter++;
+                        if (counter === index && f === friend) {
+                            targetIndex = i;
+                            break outer;
+                        }
+                    }
+                }
+            }
+
+            if (!friendsData[friend] || friendsData[friend].length <= targetIndex) return;
+
+            const p = friendsData[friend][targetIndex];
+            document.getElementById('playerName').value = p.name;
+            document.getElementById('team').value = p.team;
+            document.getElementById('runs').value = p.runs;
+            document.getElementById('wickets').value = p.wickets;
+            document.getElementById('avg').value = p.avg || '-';
+
+            isEditing = true;
+            editingFriend = friend;
+            editingIndex = targetIndex;
+            document.getElementById('addBtn').textContent = '💾 SAVE EDIT';
+            document.getElementById('cancelEditBtn').style.display = 'inline-block';
+            // ensure correct tab is active
+            switchFriend(friend);
+        }
+
+        function cancelEdit() {
+            isEditing = false;
+            editingFriend = null;
+            editingIndex = -1;
+            clearInputs();
+            document.getElementById('addBtn').textContent = '➕ ADD PLAYER';
+            document.getElementById('cancelEditBtn').style.display = 'none';
+        }
+
+        function deletePlayer(friend, index) {
+            if (!friendsData[friend]) return;
+            if (confirm('Player delete karna hai?')) {
+                // If viewing 'All', index is the position in the flattened list; we need to find correct index in friend's array.
+                if (currentFriend === 'All') {
+                    // find corresponding player by matching index in flattened list
+                    let counter = -1;
+                    let removed = false;
+                    for (const f of Object.keys(friendsData)) {
+                        for (let i = 0; i < friendsData[f].length; i++) {
+                            counter++;
+                            if (counter === index && f === friend) {
+                                friendsData[f].splice(i, 1);
+                                removed = true;
+                                break;
+                            }
+                        }
+                        if (removed) break;
+                    }
+                } else {
+                    friendsData[friend].splice(index, 1);
+                }
+
+                if (friendsData[friend] && friendsData[friend].length === 0) {
+                    delete friendsData[friend];
+                }
+                renderTable();
+                saveData();
+                createTabs();
+            }
+        }
+
+        function clearCurrent() {
+            if (currentFriend !== 'All' && confirm('Current friend ke saare players delete?')) {
+                delete friendsData[currentFriend];
+                renderTable();
+                saveData();
+                createTabs();
+            }
+        }
+
+        function addNewFriend() {
+            const newFriend = prompt('Naya friend ka naam daalein:');
+            if (newFriend && !friendsData[newFriend]) {
+                friendsData[newFriend] = [];
+                saveData();
+                createTabs();
+                switchFriend(newFriend);
+            }
+        }
+
+        function exportData() {
+            const dataStr = JSON.stringify(friendsData, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'ipl-friends-league-backup.json';
+            link.click();
+
+            // Export animation
+            const exportBtn = document.querySelector('.export-btn');
+            if (exportBtn) {
+                exportBtn.style.animation = 'spin 1s linear';
+                setTimeout(() => {
+                    exportBtn.style.animation = '';
+                }, 1000);
+            }
+        }
+
+        function clearInputs() {
+            const inputs = ['playerName', 'team', 'runs', 'wickets', 'avg'];
+            inputs.forEach(id => {
+                const element = document.getElementById(id);
+                if (!element) return;
+                if (element.tagName === 'SELECT') {
+                    element.value = '-';
+                } else {
+                    element.value = '';
+                }
+            });
+        }
+
+        // Initialize on page load
+        window.addEventListener('load', () => {
+            loadData();
+            createTabs();
+            renderTable();
+        });
+
+        // Enter key support
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                addPlayer();
+            }
+        });
+
+        // Smooth scroll for mobile (if any anchors exist)
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) target.scrollIntoView({ behavior: 'smooth' });
+            });
+        });
+    </script>
+</body>
+</html>
