@@ -417,6 +417,78 @@
             left: 0;
             transform: rotate(-90deg);
         }
+        /* Phone overlay styles */
+        #phonesOverlay > div {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 18px;
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .phone-card {
+            background: linear-gradient(180deg,#fff,#f7f9fb);
+            border-radius: 24px;
+            padding: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+            position: relative;
+            min-height: 360px;
+            display:flex;
+            flex-direction:column;
+            overflow:hidden;
+        }
+
+        .phone-header {
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:8px;
+            margin-bottom:10px;
+        }
+
+        .phone-topbar {
+            height:8px;
+            background:linear-gradient(90deg,#e0e0e0,#cfcfcf);
+            border-radius:999px;
+            width:60%;
+            margin-bottom:8px;
+        }
+
+        .phone-name {
+            font-weight:700;
+            color:#2c3e50;
+            font-size:1.05em;
+        }
+
+        .phone-list {
+            flex:1 1 auto;
+            overflow:auto;
+            padding-right:6px;
+        }
+
+        .phone-player {
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            padding:8px 10px;
+            border-radius:10px;
+            margin-bottom:8px;
+            background:linear-gradient(90deg,#fff,#fbfdff);
+            box-shadow:0 6px 14px rgba(0,0,0,0.06);
+        }
+
+        .phone-player .meta { display:flex; gap:8px; align-items:center }
+        .phone-player .pname { font-weight:600; color:#34495e }
+        .phone-player .team { font-size:0.85em; color:#7f8c8d }
+        .phone-player .stats { text-align:right; min-width:72px }
+        .phone-player .runs { color:#27ae60; font-weight:700 }
+        .phone-player .wickets { color:#e74c3c; font-weight:700 }
+
+        @media (max-width:600px) {
+            #phonesOverlay { padding: 12px }
+            .phone-card { min-height: 260px }
+        }
     </style>
 </head>
 <body>
@@ -453,6 +525,7 @@
                 <button id="cancelEditBtn" class="clear-btn" onclick="cancelEdit()" style="display:none">✖️ Cancel Edit</button>
                 <button class="clear-btn" onclick="clearCurrent()">🗑️ Clear Current</button>
                 <button class="export-btn" onclick="exportData()">📤 Export JSON</button>
+                <button class="export-btn" style="background:linear-gradient(45deg,#16a085,#1abc9c)" onclick="showAllOnPhones()">📱 Show All on Phones</button>
             </div>
         </div>
 
@@ -472,6 +545,14 @@
                 <tbody id="tableBody"></tbody>
             </table>
         </div>
+    </div>
+
+    <!-- Phone overlay (hidden by default) -->
+    <div id="phonesOverlay" style="display:none; position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:2000;align-items:center;justify-content:center;padding:30px;overflow:auto"> 
+        <div style="max-width:1200px;width:100%;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:18px;">
+            <!-- phone cards will be injected here -->
+        </div>
+        <button onclick="closePhonesOverlay()" style="position:fixed;top:18px;right:18px;padding:12px 16px;border-radius:12px;border:none;background:#e74c3c;color:#fff;font-weight:bold;box-shadow:0 8px 20px rgba(231,76,60,0.4);cursor:pointer">✖ Close</button>
     </div>
 
     <script>
@@ -827,6 +908,83 @@
             createTabs();
             renderTable();
         });
+
+        // Show all friends in phone-styled overlay
+        function showAllOnPhones() {
+            const overlay = document.getElementById('phonesOverlay');
+            const grid = overlay.querySelector('div');
+            grid.innerHTML = ''; // clear
+
+            // If no friends, show message
+            const friendNames = Object.keys(friendsData);
+            if (friendNames.length === 0) {
+                grid.innerHTML = '<div style="color:#fff;font-size:1.2em">No friends found</div>';
+                overlay.style.display = 'flex';
+                return;
+            }
+
+            friendNames.forEach(friend => {
+                const card = document.createElement('div');
+                card.className = 'phone-card';
+
+                const header = document.createElement('div');
+                header.className = 'phone-header';
+                header.innerHTML = `<div>
+                    <div class="phone-topbar"></div>
+                    <div class="phone-name">${escapeHtml(friend)}</div>
+                </div>
+                <div style="text-align:right;font-size:0.85em;color:#95a5a6">${(friendsData[friend]||[]).length} players</div>`;
+
+                const list = document.createElement('div');
+                list.className = 'phone-list';
+
+                const players = friendsData[friend] || [];
+                if (players.length === 0) {
+                    const empty = document.createElement('div');
+                    empty.style.color = '#7f8c8d';
+                    empty.style.padding = '12px';
+                    empty.textContent = 'No players';
+                    list.appendChild(empty);
+                } else {
+                    players.forEach(p => {
+                        const item = document.createElement('div');
+                        item.className = 'phone-player';
+                        item.innerHTML = `
+                            <div class="meta">
+                                <div>
+                                    <div class="pname">${escapeHtml(p.name)}</div>
+                                    <div class="team">${escapeHtml(p.team || '-')}</div>
+                                </div>
+                            </div>
+                            <div class="stats">
+                                <div class="runs">${Number(p.runs)||0} R</div>
+                                <div class="wickets">${Number(p.wickets)||0} W</div>
+                            </div>
+                        `;
+                        list.appendChild(item);
+                    });
+                }
+
+                card.appendChild(header);
+                card.appendChild(list);
+                grid.appendChild(card);
+            });
+
+            overlay.style.display = 'flex';
+        }
+
+        function closePhonesOverlay() {
+            const overlay = document.getElementById('phonesOverlay');
+            overlay.style.display = 'none';
+        }
+
+        // small helper to escape HTML
+        function escapeHtml(str){
+            if (!str && str !== 0) return '';
+            return String(str).replace(/[&<>"'`]/g, function(s){
+                return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;",'`':'&#96;'})[s];
+            });
+        }
 
         // Enter key support
         document.addEventListener('keypress', function(e) {
