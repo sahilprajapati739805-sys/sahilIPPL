@@ -521,10 +521,18 @@
                     <option value="50+">50+</option>
                     <option value="40-49">40-49</option>
                 </select>
+                <label style="display:flex;align-items:center;gap:8px;color:#fff">
+                    <input type="checkbox" id="addToPrev" style="width:16px;height:16px" />
+                    <span style="font-size:0.95em">Add to previous runs/wickets (if player exists)</span>
+                </label>
                 <button id="addBtn" class="add-btn" onclick="addPlayer()">➕ ADD PLAYER</button>
                 <button id="cancelEditBtn" class="clear-btn" onclick="cancelEdit()" style="display:none">✖️ Cancel Edit</button>
                 <button class="clear-btn" onclick="clearCurrent()">🗑️ Clear Current</button>
                 <button class="export-btn" onclick="exportData()">📤 Export JSON</button>
+                <label style="display:flex;align-items:center;gap:8px">
+                    <input id="showAllSame" type="checkbox" style="width:16px;height:16px;" checked />
+                    <span style="font-size:0.95em;color:#fff">Sabke players sabko dikhe</span>
+                </label>
                 <button class="export-btn" style="background:linear-gradient(45deg,#16a085,#1abc9c)" onclick="showAllOnPhones()">📱 Show All on Phones</button>
             </div>
         </div>
@@ -575,6 +583,11 @@
                 saveStatus.classList.remove('saved');
                 saveStatus.textContent = '';
             }, 3000);
+            // If phones overlay is open, refresh it so changes appear immediately
+            const overlay = document.getElementById('phonesOverlay');
+            if (overlay && overlay.style.display !== 'none') {
+                renderPhonesGrid();
+            }
         }
 
         // Auto-save every 5 seconds
@@ -735,6 +748,7 @@
             const runs = parseInt(document.getElementById('runs').value) || 0;
             const wickets = parseInt(document.getElementById('wickets').value) || 0;
             const avg = document.getElementById('avg').value;
+            const addToPrev = document.getElementById('addToPrev')?.checked;
 
             if (!name || !team) return alert('Name aur Team dono chahiye');
 
@@ -761,11 +775,31 @@
             }
 
             if (!friendsData[currentFriend]) friendsData[currentFriend] = [];
-            friendsData[currentFriend].push({name, team, runs, wickets, avg});
+            if (addToPrev) {
+                // try to find existing player by name+team within the currentFriend
+                const existing = friendsData[currentFriend].find(p => String(p.name).toLowerCase() === name.toLowerCase() && String(p.team||'').toLowerCase() === team.toLowerCase());
+                if (existing) {
+                    existing.runs = (Number(existing.runs) || 0) + runs;
+                    existing.wickets = (Number(existing.wickets) || 0) + wickets;
+                    // update avg if provided (optional)
+                    if (avg && avg !== '-') existing.avg = avg;
+                    const saveStatus = document.getElementById('saveStatus');
+                    saveStatus.textContent = `🔁 Updated ${existing.name} for ${currentFriend}`;
+                    setTimeout(() => saveStatus.textContent = '', 2000);
+                } else {
+                    friendsData[currentFriend].push({name, team, runs, wickets, avg});
+                }
+            } else {
+                friendsData[currentFriend].push({name, team, runs, wickets, avg});
+            }
             clearInputs();
             renderTable();
             saveData();
             createTabs();
+
+            // If phones overlay open, refresh so everyone's phones show the new player
+            const overlay = document.getElementById('phonesOverlay');
+            if (overlay && overlay.style.display !== 'none') renderPhonesGrid();
 
             // Success animation
             const addBtnEl = document.getElementById('addBtn');
@@ -808,6 +842,9 @@
             document.getElementById('cancelEditBtn').style.display = 'inline-block';
             // ensure correct tab is active
             switchFriend(friend);
+            // If phones overlay open, refresh to reflect edit UI selection
+            const overlay = document.getElementById('phonesOverlay');
+            if (overlay && overlay.style.display !== 'none') renderPhonesGrid();
         }
 
         function cancelEdit() {
@@ -848,6 +885,9 @@
                 renderTable();
                 saveData();
                 createTabs();
+                // refresh overlay if visible
+                const overlay = document.getElementById('phonesOverlay');
+                if (overlay && overlay.style.display !== 'none') renderPhonesGrid();
             }
         }
 
@@ -912,15 +952,30 @@
         // Show all friends in phone-styled overlay
         function showAllOnPhones() {
             const overlay = document.getElementById('phonesOverlay');
-            const grid = overlay.querySelector('div');
-            grid.innerHTML = ''; // clear
+            overlay.style.display = 'flex';
+            renderPhonesGrid();
 
-            // If no friends, show message
+            // overlay shown; renderPhonesGrid handles content
+        }
+
+        // Shared renderer for phones grid (used on open and refresh)
+        function renderPhonesGrid() {
+            const overlay = document.getElementById('phonesOverlay');
+            const grid = overlay.querySelector('div');
+            grid.innerHTML = '';
+
             const friendNames = Object.keys(friendsData);
             if (friendNames.length === 0) {
                 grid.innerHTML = '<div style="color:#fff;font-size:1.2em">No friends found</div>';
-                overlay.style.display = 'flex';
                 return;
+            }
+
+            const showSame = document.getElementById('showAllSame')?.checked;
+            let globalPlayers = [];
+            if (showSame) {
+                Object.keys(friendsData).forEach(f => {
+                    (friendsData[f]||[]).forEach(p => globalPlayers.push({...p, friend: f}));
+                });
             }
 
             friendNames.forEach(friend => {
@@ -929,16 +984,18 @@
 
                 const header = document.createElement('div');
                 header.className = 'phone-header';
+                const headerCount = showSame ? globalPlayers.length : (friendsData[friend]||[]).length;
+                const headerLabel = showSame ? 'All Players' : escapeHtml(friend);
                 header.innerHTML = `<div>
                     <div class="phone-topbar"></div>
-                    <div class="phone-name">${escapeHtml(friend)}</div>
+                    <div class="phone-name">${headerLabel}</div>
                 </div>
-                <div style="text-align:right;font-size:0.85em;color:#95a5a6">${(friendsData[friend]||[]).length} players</div>`;
+                <div style="text-align:right;font-size:0.85em;color:#95a5a6">${headerCount} players</div>`;
 
                 const list = document.createElement('div');
                 list.className = 'phone-list';
 
-                const players = friendsData[friend] || [];
+                const players = showSame ? globalPlayers : (friendsData[friend] || []);
                 if (players.length === 0) {
                     const empty = document.createElement('div');
                     empty.style.color = '#7f8c8d';
@@ -969,9 +1026,22 @@
                 card.appendChild(list);
                 grid.appendChild(card);
             });
-
-            overlay.style.display = 'flex';
         }
+
+        // Sync across tabs: when localStorage changes, reload friendsData and update UI
+        window.addEventListener('storage', (ev) => {
+            if (ev.key === 'iplFriendsLeague') {
+                try {
+                    friendsData = JSON.parse(ev.newValue) || {};
+                } catch (e) {
+                    friendsData = {};
+                }
+                createTabs();
+                renderTable();
+                const overlay = document.getElementById('phonesOverlay');
+                if (overlay && overlay.style.display !== 'none') renderPhonesGrid();
+            }
+        });
 
         function closePhonesOverlay() {
             const overlay = document.getElementById('phonesOverlay');
